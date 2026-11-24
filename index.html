@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Funções da sala</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    background: #ebebed;
+    color: #2c2c30;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, [role="button"] { cursor: pointer; font: inherit; }
+  .screen { min-height: 100dvh; padding: 30px 44px 16px; display: flex; }
+  .panel {
+    flex: 1; min-width: 0; background: #fff; border: 1px solid rgba(22,22,28,.07);
+    border-radius: 12px; box-shadow: 0 12px 36px rgba(28,28,40,.05), 0 1px 2px rgba(28,28,40,.04);
+    display: flex; flex-direction: column; overflow: hidden; min-height: calc(100dvh - 46px);
+  }
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 18px 8px 20px; }
+  .crumb { display: flex; align-items: center; gap: 6px; font-size: 13.5px; letter-spacing: -.015em; }
+  .muted { color: #8b8b90; font-weight: 500; }
+  .strong { color: #1d1d21; font-weight: 600; }
+  .actions { display: flex; align-items: center; gap: 10px; }
+  .seg { display: flex; background: #f2f2f4; border-radius: 8px; padding: 2px; height: 28px; }
+  .seg button { border: 0; background: transparent; color: #6d6d72; font-weight: 500; font-size: 12px; height: 24px; padding: 0 10px; border-radius: 6px; }
+  .seg button[aria-selected="true"] { background: #fff; color: #1d1d21; box-shadow: 0 1px 2px rgba(20,20,30,.08); }
+  .stack { display: flex; }
+  .stack i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; margin-left: -7px; display: block; }
+  .stack i:first-child { margin-left: 0; }
+  .new-btn { border: 0; background: #6266db; color: #fff; font-weight: 600; font-size: 12px; height: 28px; padding: 0 12px; border-radius: 7px; }
+  .board { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; padding: 6px 22px 16px; }
+  .column { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .head { height: 32px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .dot-gray { background: #c8c8ce; } .dot-amber { background: #f0b429; } .dot-green { background: #2fbe63; }
+  .col-name { border: 0; background: transparent; padding: 0; font-weight: 600; font-size: 13px; color: #2a2a2e; }
+  .count { color: #b4b4ba; font-size: 13px; font-weight: 500; }
+  .plus { margin-left: auto; border: 0; background: transparent; color: #a9a9b0; font-size: 18px; width: 28px; height: 28px; border-radius: 6px; }
+  .body { flex: 1; min-height: 120px; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+  .card {
+    text-align: left; background: #fff; border: 1px solid #e7e7eb; border-radius: 8px;
+    box-shadow: 0 1px 1.5px rgba(20,20,30,.045); padding: 10px 10px 8px; width: 100%;
+  }
+  .card.over { outline: 2px solid #c9caf5; }
+  .title { display: flex; gap: 6px; align-items: flex-start; font-size: 13px; line-height: 1.35; font-weight: 500; }
+  .done { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #2fbe63; flex: none; }
+  .meta { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .badge { height: 18px; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 500; display: inline-flex; align-items: center; }
+  .badge-ver { background: #f1e9fa; color: #7d64c9; }
+  .badge-campo { background: #f8ecdf; color: #c4844e; }
+  .badge-fluxo { background: #e7eefc; color: #5c78c9; }
+  .badge-sinal { background: #e3f6f0; color: #2f917c; }
+  .badge-arquivo { background: #fdecee; color: #d16a78; }
+  .bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 10px; }
+  .bars i { width: 2.5px; border-radius: 1px; background: #e6e6ea; display: block; }
+  .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:7px} .bars i:nth-child(3){height:10px}
+  .bars i.on { background: #f0a04a; }
+  .kid { margin-left: auto; font-size: 11px; color: #a3a3ab; font-weight: 500; }
+  .av { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+  .finder { padding: 0 22px 8px; }
+  .finder label { display: flex; align-items: center; gap: 8px; height: 34px; background: #f2f2f4; border-radius: 8px; padding: 0 10px; }
+  .finder input { flex: 1; border: 0; background: transparent; outline: none; font: 400 13px Inter, sans-serif; }
+  .note { margin: 6px 0 0; font-size: 12px; color: #8e8e93; }
+  .catalog { flex: 1; overflow: auto; padding: 0 14px 16px; }
+  .row, .path {
+    width: 100%; border: 0; background: transparent; text-align: left; color: inherit;
+    display: grid; gap: 8px; align-items: center; padding: 8px; border-radius: 8px;
+  }
+  .row { grid-template-columns: 14px minmax(0,1fr) auto auto auto; }
+  .row:hover, .path:hover { background: #f7f7f8; }
+  .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 500; }
+  .phase { padding: 8px; }
+  .phase + .phase { border-top: 1px solid #f1f1f3; }
+  .phase h3 { margin: 8px 0; font-size: 13px; display: flex; gap: 8px; align-items: baseline; }
+  .phase h3 span { font-weight: 400; color: #8e8e93; font-size: 12px; }
+  .path { grid-template-columns: 16px minmax(0,1fr) auto auto; align-items: start; }
+  .path small { display: block; color: #8e8e93; font-size: 12px; line-height: 1.35; margin-top: 2px; }
+  .shade { position: fixed; inset: 0; background: rgba(24,24,32,.28); display: grid; place-items: center; padding: 20px; }
+  .dialog { width: min(440px, 100%); background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 20px 50px rgba(20,20,30,.16); }
+  .dialog h2 { margin: 0 0 12px; font-size: 15px; }
+  .dialog label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #8e8e93; margin: 10px 0 6px; }
+  .dialog input, .dialog textarea { width: 100%; border: 1px solid #e7e7eb; border-radius: 8px; padding: 8px 10px; font: 400 13px/1.4 Inter, sans-serif; }
+  .choices { display: flex; flex-wrap: wrap; gap: 6px; }
+  .choice { border: 1px solid transparent; background: #f2f2f4; border-radius: 999px; height: 28px; padding: 0 10px; font-size: 12px; }
+  .choice[aria-pressed="true"] { background: #eef0ff; border-color: #d5d7f7; color: #3a3fbf; }
+  .foot { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+  .foot .danger { margin-right: auto; border: 0; background: transparent; color: #d16a78; height: 32px; }
+  .ghost { border: 0; background: transparent; height: 32px; color: #5e5e66; }
+  .save { border: 0; background: #6266db; color: #fff; height: 32px; padding: 0 14px; border-radius: 8px; font-weight: 600; }
+  @media (max-width: 800px) {
+    .screen { padding: 10px; }
+    .topbar { flex-wrap: wrap; }
+    .actions { width: 100%; }
+    .seg { flex: 1; } .seg button { flex: 1; }
+    .board { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+    .column { min-width: 86%; scroll-snap-align: center; }
+    .row { grid-template-columns: 14px minmax(0,1fr) auto; }
+    .row .badge, .row .av { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="screen"><section class="panel" id="app"></section></div>
+<script id="seed" type="application/json">{"columns":[{"id":"preparar","title":"Preparar","tone":"gray","hint":"Antes da sala: quadro, equipe, visões e o arquivo."},{"id":"abordar","title":"Abordar","tone":"amber","hint":"Durante a sala: empresa, pessoas e o que a Central decide."},{"id":"encerrar","title":"Encerrar","tone":"green","hint":"Depois do contato: ficha, lote, agenda e o que você leva."}],"cards":[{"id":"SAL-284","columnId":"preparar","title":"Renomear a coluna","description":"Clique no nome da coluna para renomear.","badges":["fluxo"],"priority":2,"assignee":0},{"id":"SAL-283","columnId":"preparar","title":"Arrastar a coluna usando o controle Mover","description":"Arraste pelo “Mover” para mudar a coluna de lugar.","badges":["fluxo"],"priority":3,"assignee":1},{"id":"SAL-282","columnId":"preparar","title":"Cor da coluna","description":"Troque a cor da coluna.","badges":["campo"],"priority":1,"assignee":2},{"id":"SAL-281","columnId":"preparar","title":"Definir o limite de cartões da coluna","description":"Defina um limite de cartões na coluna.","badges":["campo"],"priority":2,"assignee":3},{"id":"SAL-280","columnId":"preparar","title":"Mover a coluna com ← e →","description":"Use ← → do teclado para mudar a coluna de lugar.","badges":["fluxo"],"priority":2,"assignee":0},{"id":"SAL-279","columnId":"preparar","title":"Criar coluna","description":"Crie colunas.","badges":["fluxo"],"priority":2,"assignee":1},{"id":"SAL-278","columnId":"preparar","title":"Excluir coluna","description":"Exclua colunas.","badges":["fluxo"],"priority":1,"assignee":2},{"id":"SAL-277","columnId":"preparar","title":"Incluir quem aborda","description":"Em “Equipe”, adicione quem aborda.","badges":["campo"],"priority":2,"assignee":3},{"id":"SAL-276","columnId":"preparar","title":"Renomear quem aborda","description":"Em “Equipe”, renomeie quem aborda.","badges":["campo"],"priority":1,"assignee":0},{"id":"SAL-275","columnId":"preparar","title":"Remover quem aborda","description":"Em “Equipe”, remova quem aborda.","badges":["campo"],"priority":1,"assignee":1},{"id":"SAL-274","columnId":"preparar","title":"Desfazer a última mudança do quadro","description":"“Desfazer” volta a última mudança do quadro.","badges":["arquivo"],"priority":3,"assignee":2},{"id":"SAL-273","columnId":"preparar","title":"Tudo no navegador, sem servidor","description":"Tudo fica no navegador, sem servidor.","badges":["arquivo"],"priority":3,"assignee":3},{"id":"SAL-272","columnId":"preparar","title":"Backup JSON para outro aparelho","description":"Use Backup JSON para levar o trabalho a outro aparelho ou ao time.","badges":["arquivo"],"priority":3,"assignee":0},{"id":"SAL-271","columnId":"preparar","title":"Visão em tabela","description":"Tabela é uma das cinco formas de ver as pessoas.","badges":["ver"],"priority":2,"assignee":1},{"id":"SAL-270","columnId":"preparar","title":"Visão por empresa","description":"Por empresa é uma das cinco formas de ver as pessoas.","badges":["ver"],"priority":2,"assignee":2},{"id":"SAL-269","columnId":"preparar","title":"Visão em funil","description":"Funil é uma das cinco formas de ver as pessoas.","badges":["ver"],"priority":2,"assignee":3},{"id":"SAL-268","columnId":"preparar","title":"Visão em matriz","description":"Matriz é uma das cinco formas de ver as pessoas.","badges":["ver"],"priority":1,"assignee":0},{"id":"SAL-267","columnId":"preparar","title":"Visão em rede","description":"Rede é uma das cinco formas de ver as pessoas.","badges":["ver"],"priority":1,"assignee":1},{"id":"SAL-266","columnId":"preparar","title":"As cinco visões na mesma base","description":"Tabela, Por empresa, Funil, Matriz e Rede usam a mesma base.","badges":["ver"],"priority":3,"assignee":2},{"id":"SAL-265","columnId":"preparar","title":"Busca vale em todas as visões","description":"As cinco visões respeitam a busca.","badges":["ver"],"priority":2,"assignee":3},{"id":"SAL-264","columnId":"preparar","title":"Filtros valem em todas as visões","description":"As cinco visões respeitam os filtros.","badges":["ver"],"priority":2,"assignee":0},{"id":"SAL-263","columnId":"abordar","title":"Pessoas da empresa dentro do cartão","description":"Cada cartão é uma empresa, com as pessoas dela dentro.","badges":["fluxo"],"priority":3,"assignee":1},{"id":"SAL-262","columnId":"abordar","title":"Arrastar entre colunas","description":"Arraste o cartão entre colunas.","badges":["fluxo"],"priority":3,"assignee":2},{"id":"SAL-261","columnId":"abordar","title":"Sugestões do que fazer agora","description":"Na ficha do cartão você recebe sugestões do que fazer.","badges":["sinal","ver"],"priority":2,"assignee":3},{"id":"SAL-260","columnId":"abordar","title":"Indicadores a cada edição","description":"A Central recalcula indicadores a cada edição.","badges":["sinal"],"priority":3,"assignee":0},{"id":"SAL-259","columnId":"abordar","title":"Número abre o recorte","description":"Clique em qualquer número para ir direto ao recorte.","badges":["ver"],"priority":2,"assignee":1},{"id":"SAL-258","columnId":"abordar","title":"Resumo da sala","description":"A visão geral resume a sala.","badges":["ver"],"priority":2,"assignee":2},{"id":"SAL-257","columnId":"abordar","title":"Fatos, inferências e tarefas","description":"A Central separa fatos, inferências e tarefas criadas por vocês.","badges":["sinal"],"priority":3,"assignee":3},{"id":"SAL-256","columnId":"abordar","title":"Editar a ficha do cartão","description":"Na ficha do cartão você edita a empresa.","badges":["campo"],"priority":2,"assignee":0},{"id":"SAL-255","columnId":"abordar","title":"Adicionar pessoas ao cartão","description":"Na ficha do cartão você adiciona pessoas.","badges":["campo"],"priority":2,"assignee":1},{"id":"SAL-254","columnId":"abordar","title":"Vincular pessoas","description":"Na ficha do cartão você vincula pessoas.","badges":["campo"],"priority":1,"assignee":2},{"id":"SAL-253","columnId":"abordar","title":"Mudar pessoa de empresa","description":"Na ficha do cartão você muda pessoas de empresa.","badges":["fluxo"],"priority":2,"assignee":3},{"id":"SAL-252","columnId":"abordar","title":"Responsável do cartão","description":"No cartão você define o responsável.","badges":["campo"],"priority":2,"assignee":0},{"id":"SAL-251","columnId":"abordar","title":"Temperatura do cartão","description":"No cartão você define a temperatura.","badges":["sinal"],"priority":3,"assignee":1},{"id":"SAL-250","columnId":"abordar","title":"Valor do cartão","description":"No cartão você define o valor.","badges":["campo"],"priority":2,"assignee":2},{"id":"SAL-249","columnId":"abordar","title":"Prazo do cartão","description":"No cartão você define o prazo.","badges":["campo"],"priority":2,"assignee":3},{"id":"SAL-248","columnId":"abordar","title":"Checklist do cartão","description":"No cartão você define o checklist.","badges":["campo"],"priority":1,"assignee":0},{"id":"SAL-247","columnId":"abordar","title":"Reunião no cartão","description":"No cartão você define a reunião.","badges":["campo"],"priority":2,"assignee":1},{"id":"SAL-246","columnId":"abordar","title":"Mover cartão com ◀ ▶","description":"Além de arrastar, use ◀ ▶ para mover o cartão de coluna.","badges":["fluxo"],"priority":2,"assignee":2},{"id":"SAL-245","columnId":"abordar","title":"Primeira abordagem muda a coluna","description":"Com a automação ligada, a primeira abordagem leva o cartão para “Abordado no evento”.","badges":["sinal"],"priority":3,"assignee":3},{"id":"SAL-244","columnId":"abordar","title":"Reunião marcada muda a coluna","description":"Com a automação ligada, uma reunião leva o cartão para “Reunião marcada”.","badges":["sinal"],"priority":3,"assignee":0},{"id":"SAL-243","columnId":"abordar","title":"Clique no texto para editar","description":"Na tabela e na visão por empresa, clique em qualquer texto para editar.","badges":["campo"],"priority":2,"assignee":1},{"id":"SAL-242","columnId":"abordar","title":"Seleção e botão salvam na hora","description":"Seleções e botões salvam na hora.","badges":["sinal"],"priority":2,"assignee":2},{"id":"SAL-241","columnId":"encerrar","title":"Ficha da pessoa","description":"“Ficha” abre a gestão da pessoa.","badges":["campo"],"priority":2,"assignee":3},{"id":"SAL-240","columnId":"encerrar","title":"Tarefas e reuniões","description":"A Agenda junta tarefas e reuniões marcadas.","badges":["ver"],"priority":2,"assignee":0},{"id":"SAL-239","columnId":"encerrar","title":"Exportar CSV","description":"Exporte CSV.","badges":["arquivo"],"priority":2,"assignee":1},{"id":"SAL-238","columnId":"encerrar","title":"Excel com 3 abas","description":"Exporte Excel com 3 abas.","badges":["arquivo"],"priority":2,"assignee":2},{"id":"SAL-237","columnId":"encerrar","title":"Exportar a auditoria","description":"Exporte a auditoria.","badges":["arquivo"],"priority":2,"assignee":3},{"id":"SAL-236","columnId":"encerrar","title":"Agenda em arquivo ICS","description":"Exporte a agenda em ICS.","badges":["arquivo"],"priority":2,"assignee":0},{"id":"SAL-235","columnId":"encerrar","title":"Responsável na ficha","description":"Na ficha da pessoa você define o responsável.","badges":["campo"],"priority":2,"assignee":1},{"id":"SAL-234","columnId":"encerrar","title":"Status da pessoa","description":"Na ficha da pessoa você define o status.","badges":["campo"],"priority":2,"assignee":2},{"id":"SAL-233","columnId":"encerrar","title":"Prazo na ficha","description":"Na ficha da pessoa você define o prazo.","badges":["campo"],"priority":2,"assignee":3},{"id":"SAL-232","columnId":"encerrar","title":"Canal de contato","description":"Na ficha da pessoa você define o canal.","badges":["campo"],"priority":2,"assignee":0},{"id":"SAL-231","columnId":"encerrar","title":"LinkedIn da pessoa","description":"Na ficha da pessoa você guarda o LinkedIn.","badges":["campo"],"priority":1,"assignee":1},{"id":"SAL-230","columnId":"encerrar","title":"Empresa no Kanban","description":"Na ficha da pessoa você vê e define a empresa no Kanban.","badges":["fluxo"],"priority":2,"assignee":2},{"id":"SAL-229","columnId":"encerrar","title":"Histórico de interações","description":"Na ficha da pessoa fica o histórico de interações.","badges":["ver"],"priority":2,"assignee":3},{"id":"SAL-228","columnId":"encerrar","title":"Marcar pessoas na lista","description":"Marque pessoas na lista para agir em lote.","badges":["fluxo"],"priority":2,"assignee":0},{"id":"SAL-227","columnId":"encerrar","title":"Selecionar todo o filtro","description":"Selecione todos os resultados filtrados de uma vez.","badges":["fluxo"],"priority":2,"assignee":1},{"id":"SAL-226","columnId":"encerrar","title":"Lote muda a prioridade","description":"Altere a prioridade de várias pessoas de uma vez.","badges":["campo"],"priority":2,"assignee":2},{"id":"SAL-225","columnId":"encerrar","title":"Lote muda a relação","description":"Altere a relação de várias pessoas de uma vez.","badges":["campo"],"priority":2,"assignee":3},{"id":"SAL-224","columnId":"encerrar","title":"Lote muda o check-in","description":"Altere o check-in de várias pessoas de uma vez.","badges":["campo"],"priority":2,"assignee":0},{"id":"SAL-223","columnId":"encerrar","title":"Lote muda a coluna","description":"Altere a coluna do Kanban de várias pessoas de uma vez.","badges":["fluxo"],"priority":3,"assignee":1},{"id":"SAL-222","columnId":"encerrar","title":"Lote muda o responsável","description":"Altere o responsável do Kanban de várias pessoas de uma vez.","badges":["campo"],"priority":2,"assignee":2},{"id":"SAL-221","columnId":"encerrar","title":"Desfazer o último lote","description":"“Desfazer último lote” volta tudo.","badges":["arquivo"],"priority":3,"assignee":3}]}</script>
+<script>
+const BADGES = { ver:"Ver", campo:"Campo", fluxo:"Fluxo", sinal:"Sinal", arquivo:"Arquivo" };
+const AVATARS = ["#f7a05b","#2a9e8e","#8e94e1","#e36d5c"];
+const KEY = "sala-funcoes-arquivo-v1";
+const seed = JSON.parse(document.getElementById("seed").textContent);
+let state = load();
+let view = "board";
+let query = "";
+let draft = null;
+let dragId = null;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.cards) && parsed.cards.length) return parsed;
+    }
+  } catch {}
+  return structuredClone(seed);
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function cardsOf(id) { return state.cards.filter(c => c.columnId === id); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&": "\u0026amp;",
+    "<": "\u0026lt;",
+    ">": "\u0026gt;",
+    '"': "\u0026quot;",
+    "'": "\u0026#39;"
+  }[ch]));
+}
+function bars(level, show) {
+  if (!show) return "";
+  return '<span class="bars">' + [0,1,2].map(i => '<i class="' + (i < level ? "on" : "") + '"></i>').join("") + "</span>";
+}
+function face(card) {
+  const dot = card.columnId === "encerrar" ? '<i class="done"></i>' : "";
+  const badges = card.badges.map(b => '<span class="badge badge-' + b + '">' + BADGES[b] + "</span>").join("");
+  return '<div class="title">' + dot + "<span>" + esc(card.title) + "</span></div>" +
+    '<div class="meta">' + badges + bars(card.priority, card.columnId !== "encerrar") +
+    '<span class="kid">' + esc(card.id) + '</span><i class="av" style="background:' + AVATARS[card.assignee % 4] + '"></i></div>';
+}
+function columnHead(col, n) {
+  return '<div class="head"><i class="dot dot-' + col.tone + '"></i>' +
+    '<button class="col-name" data-rename="' + col.id + '" title="' + esc(col.hint) + '">' + esc(col.title) + "</button>" +
+    '<span class="count">' + n + '</span><button class="plus" data-add="' + col.id + '">+</button></div>';
+}
+function board() {
+  return '<div class="board">' + state.columns.map(col => {
+    const list = cardsOf(col.id);
+    return '<section class="column" data-col="' + col.id + '">' + columnHead(col, list.length) +
+      '<div class="body" data-drop="' + col.id + '">' +
+      list.map(card => '<button class="card" draggable="true" data-id="' + card.id + '">' + face(card) + "</button>").join("") +
+      "</div></section>";
+  }).join("") + "</div>";
+}
+function match(card) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (card.title + " " + card.description + " " + card.id + " " + card.badges.join(" ")).toLowerCase().includes(q);
+}
+function listView() {
+  const items = state.cards.filter(match);
+  return finder(items.length) + '<div class="catalog">' + items.map(card => {
+    const col = state.columns.find(c => c.id === card.columnId);
+    return '<button class="row" data-id="' + card.id + '"><i class="dot dot-' + col.tone + '"></i><span class="ellipsis">' +
+      esc(card.title) + "</span>" + card.badges.map(b => '<span class="badge badge-' + b + '">' + BADGES[b] + "</span>").join("") +
+      '<span class="kid">' + esc(card.id) + '</span><i class="av" style="background:' + AVATARS[card.assignee % 4] + '"></i></button>';
+  }).join("") + "</div>";
+}
+function pathView() {
+  const items = state.cards.filter(match);
+  return finder(items.length) + '<div class="catalog">' + state.columns.map(col => {
+    const list = items.filter(c => c.columnId === col.id);
+    if (!list.length) return "";
+    return '<section class="phase"><h3><i class="dot dot-' + col.tone + '"></i>' + esc(col.title) + "<span>" + esc(col.hint) + "</span></h3>" +
+      list.map(card => '<button class="path" data-id="' + card.id + '"><i class="dot dot-' + col.tone + '"></i><span><strong>' +
+        esc(card.title) + "</strong><small>" + esc(card.description) + "</small></span><span class=\"badge badge-" + card.badges[0] + '\">' +
+        BADGES[card.badges[0]] + '</span><span class="kid">' + esc(card.id) + "</span></button>").join("") + "</section>";
+  }).join("") + "</div>";
+}
+function finder(n) {
+  return '<div class="finder"><label>Buscar <input id="q" value="' + esc(query) + '" placeholder="Buscar função" />' +
+    '<span class="kid">' + n + " de " + state.cards.length + '</span></label>' +
+    '<p class="note">Pelo momento da sala — preparar, abordar, encerrar — e não pelas telas do texto.</p></div>';
+}
+function header() {
+  const tabs = [["board","Quadro"],["list","Lista"],["path","Percurso"]].map(([id,label]) =>
+    '<button type="button" data-view="' + id + '" aria-selected="' + (view === id) + '">' + label + "</button>").join("");
+  return '<header class="topbar"><div class="crumb"><span class="muted">A sala</span><span class="muted">›</span><span class="strong">' +
+    state.cards.length + ' funções</span></div><div class="actions"><div class="seg">' + tabs + "</div>" +
+    '<div class="stack"><i style="background:#f7a05b"></i><i style="background:#2a9e8e"></i><i style="background:#8e94e1"></i></div>' +
+    '<button class="new-btn" data-add="preparar">Nova função</button></div></header>';
+}
+function dialog() {
+  if (!draft) return "";
+  const card = draft.id ? state.cards.find(c => c.id === draft.id) : null;
+  const title = card ? card.title : "";
+  const description = card ? card.description : "";
+  const columnId = card ? card.columnId : draft.columnId;
+  const badges = card ? card.badges : ["ver"];
+  return '<div class="shade" data-close="1"><form class="dialog" id="form">' +
+    "<h2>" + (card ? "Editar função" : "Nova função") + (card ? " · " + esc(card.id) : "") + "</h2>" +
+    '<label>Título</label><input name="title" required maxlength="80" value="' + esc(title) + '" />' +
+    '<label>O que ela faz</label><textarea name="description" rows="3" maxlength="400">' + esc(description) + "</textarea>" +
+    '<label>Momento</label><div class="choices">' + state.columns.map(col =>
+      '<button type="button" class="choice" data-colpick="' + col.id + '" aria-pressed="' + (columnId === col.id) + '">' + esc(col.title) + "</button>").join("") +
+    "</div>" +
+    '<label>Tipo</label><div class="choices">' + Object.keys(BADGES).map(b =>
+      '<button type="button" class="choice" data-badge="' + b + '" aria-pressed="' + badges.includes(b) + '">' + BADGES[b] + "</button>").join("") +
+    '</div><div class="foot">' +
+    (card ? '<button type="button" class="danger" data-del="' + card.id + '">Excluir</button>' : '<span></span>') +
+    '<button type="button" class="ghost" data-close="1">Cancelar</button><button class="save">Salvar</button></div></form></div>';
+}
+function render() {
+  const main = view === "board" ? board() : view === "list" ? listView() : pathView();
+  document.getElementById("app").innerHTML = header() + main + dialog();
+  const q = document.getElementById("q");
+  if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+}
+function place(activeId, overId, before) {
+  const moving = state.cards.find(c => c.id === activeId);
+  if (!moving || activeId === overId) return;
+  const overCard = state.cards.find(c => c.id === overId);
+  const to = state.columns.some(c => c.id === overId) ? overId : overCard && overCard.columnId;
+  if (!to) return;
+  const rest = state.cards.filter(c => c.id !== activeId);
+  const groups = Object.fromEntries(state.columns.map(c => [c.id, rest.filter(x => x.columnId === c.id)]));
+  const next = { ...moving, columnId: to };
+  const dest = groups[to];
+  let index = dest.length;
+  if (overCard && overCard.columnId === to) index = dest.findIndex(c => c.id === overId) + (before ? 0 : 1);
+  dest.splice(index, 0, next);
+  state.cards = state.columns.flatMap(c => groups[c.id]);
+  save();
+}
+document.getElementById("app").addEventListener("click", (event) => {
+  const t = event.target.closest("[data-view],[data-add],[data-id],[data-rename],[data-close],[data-del],[data-colpick],[data-badge]");
+  if (!t) return;
+  if (t.dataset.view) { view = t.dataset.view; query = ""; render(); return; }
+  if (t.dataset.add) { draft = { columnId: t.dataset.add, badges: ["ver"] }; render(); return; }
+  if (t.dataset.rename) {
+    const name = prompt("Nome da coluna", state.columns.find(c => c.id === t.dataset.rename).title);
+    if (name && name.trim()) { state.columns.find(c => c.id === t.dataset.rename).title = name.trim(); save(); render(); }
+    return;
+  }
+  if (t.dataset.close) { draft = null; render(); return; }
+  if (t.dataset.del) { state.cards = state.cards.filter(c => c.id !== t.dataset.del); draft = null; save(); render(); return; }
+  if (t.dataset.colpick) { draft.columnId = t.dataset.colpick; render(); return; }
+  if (t.dataset.badge) {
+    const badges = draft.badges || (state.cards.find(c => c.id === draft.id) || {}).badges || ["ver"];
+    draft.badges = badges.includes(t.dataset.badge) ? badges.filter(b => b !== t.dataset.badge) : badges.concat(t.dataset.badge).slice(0, 2);
+    if (!draft.badges.length) draft.badges = ["ver"];
+    render();
+    return;
+  }
+  if (t.dataset.id && !event.target.closest(".card")?.matches(":active")) {
+    const card = state.cards.find(c => c.id === t.dataset.id);
+    draft = { id: card.id, columnId: card.columnId, badges: card.badges.slice() };
+    render();
+  }
+});
+document.getElementById("app").addEventListener("input", (event) => {
+  if (event.target.id === "q") { query = event.target.value; const pos = event.target.selectionStart; render(); const q = document.getElementById("q"); if (q) q.setSelectionRange(pos, pos); }
+});
+document.getElementById("app").addEventListener("submit", (event) => {
+  if (event.target.id !== "form") return;
+  event.preventDefault();
+  const fd = new FormData(event.target);
+  const title = String(fd.get("title") || "").trim();
+  const description = String(fd.get("description") || "").trim();
+  if (!title) return;
+  if (draft.id) {
+    const card = state.cards.find(c => c.id === draft.id);
+    card.title = title; card.description = description; card.columnId = draft.columnId; card.badges = draft.badges;
+  } else {
+    const n = state.cards.reduce((m, c) => Math.max(m, Number(String(c.id).replace(/\D/g, "")) || 0), 100) + 1;
+    const card = { id: "SAL-" + n, columnId: draft.columnId, title, description, badges: draft.badges, priority: 2, assignee: state.cards.length % 4 };
+    state.cards.unshift(card);
+    const groups = Object.fromEntries(state.columns.map(c => [c.id, state.cards.filter(x => x.columnId === c.id && x.id !== card.id)]));
+    groups[card.columnId].unshift(card);
+    state.cards = state.columns.flatMap(c => groups[c.id]);
+  }
+  draft = null; save(); render();
+});
+document.getElementById("app").addEventListener("dragstart", (event) => {
+  const card = event.target.closest(".card");
+  if (!card) return;
+  dragId = card.dataset.id;
+  event.dataTransfer.effectAllowed = "move";
+});
+document.getElementById("app").addEventListener("dragover", (event) => {
+  const zone = event.target.closest("[data-drop],[data-id]");
+  if (!zone || !dragId) return;
+  event.preventDefault();
+});
+document.getElementById("app").addEventListener("drop", (event) => {
+  const card = event.target.closest(".card");
+  const zone = event.target.closest("[data-drop]");
+  if (!dragId) return;
+  event.preventDefault();
+  if (card && card.dataset.id !== dragId) {
+    const rect = card.getBoundingClientRect();
+    place(dragId, card.dataset.id, event.clientY < rect.top + rect.height / 2);
+  } else if (zone) place(dragId, zone.dataset.drop, false);
+  dragId = null;
+  render();
+});
+render();
+</script>
+</body>
+</html>
